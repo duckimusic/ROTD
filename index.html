@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Báo cáo ngày - Ghi nhanh</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; background: #f9f9f9; }
+        h1 { color: #2c3e50; }
+        label, .section-title { font-weight: bold; margin-top: 15px; display: block; }
+        input, textarea { width: 100%; margin: 5px 0 10px; padding: 8px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
+        textarea { min-height: 80px; }
+        button { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #1e2b36; }
+        .history { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+        .report-item { border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .date-badge { background: #3498db; color: white; display: inline-block; padding: 4px 8px; border-radius: 15px; font-size: 12px; }
+        hr { margin: 20px 0; }
+    </style>
+</head>
+<body>
+<h1>📆 Báo cáo nhanh trong ngày</h1>
+<div>
+    <label>📅 Ngày (dd.mm hoặc yyyy-mm-dd):</label>
+    <input type="text" id="reportDate" placeholder="VD: 24.4 hoặc 2025-04-24" value="">
+    
+    <label>📝 Nội dung chính trong ngày:</label>
+    <textarea id="dailyContent" placeholder="Hôm nay hút 5 điếu, chiều dậy đánh răng..."></textarea>
+    
+    <label>❌ 3 điều CHƯA LÀM & cần làm (mỗi dòng 1 điều):</label>
+    <textarea id="notDone" placeholder="1. Chưa dành thời gian nghe thêm kinh...\n2. Chưa luyện bài mới cho Cún...\n3. Chưa tránh viết chậm báo cáo..."></textarea>
+    
+    <label>✅ 3 điều ĐÃ LÀM (mỗi dòng 1 điều):</label>
+    <textarea id="done" placeholder="1. Kiểm tra hết ngữ pháp cho Minh...\n2. Luyện Science cho Xí Muội...\n3. Ôn bài cho HS trung tâm..."></textarea>
+    
+    <label>❓ 3 câu hỏi + tự trả lời (mỗi câu cách nhau 2 dòng, Q và A rõ ràng):</label>
+    <textarea id="questions" placeholder="Q1: Làm sao duy trì cho 2 đứa sinh đôi cùng học?\nA1: Khi 1 đứa không bắt kịp, cho đứa kia luyện kỹ năng chậm...\n\nQ2: Vì sao khó viết nhanh?\nA2: Chưa luyện viết dài..."></textarea>
+    
+    <label>📖 Pháp học / Kinh sách (tuỳ chọn):</label>
+    <textarea id="dharma" placeholder="Kinh Mi Tiên Vấn Đáp - Phần 2 (3:33:14 - 4:06:06)\nNội dung ghi chép..."></textarea>
+    
+    <button id="saveBtn">💾 LƯU BÁO CÁO</button>
+    <button id="clearFormBtn">🧹 Xoá form</button>
+    <button id="toggleHistory">📋 Ẩn/Hiện lịch sử</button>
+</div>
+
+<div id="historyPanel" class="history" style="display: none;">
+    <h3>📚 Lịch sử báo cáo</h3>
+    <div id="historyList">Chưa có báo cáo nào</div>
+    <button id="clearHistoryBtn">🗑 Xoá toàn bộ lịch sử</button>
+</div>
+
+<script>
+    function getTodayString() {
+        const today = new Date();
+        return `${today.getDate()}.${today.getMonth()+1}`;
+    }
+    document.getElementById('reportDate').value = getTodayString();
+    
+    function saveReport() {
+        const date = document.getElementById('reportDate').value.trim();
+        if(!date) { alert('Vui lòng nhập ngày'); return; }
+        const report = {
+            date: date,
+            dailyContent: document.getElementById('dailyContent').value,
+            notDone: document.getElementById('notDone').value,
+            done: document.getElementById('done').value,
+            questions: document.getElementById('questions').value,
+            dharma: document.getElementById('dharma').value,
+            timestamp: Date.now()
+        };
+        let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        // ghi đè nếu đã có cùng ngày (hoặc bạn muốn giữ nhiều bản ghi cùng ngày? Ở đây ghi đè)
+        const index = reports.findIndex(r => r.date === date);
+        if(index !== -1) reports[index] = report;
+        else reports.push(report);
+        reports.sort((a,b) => (b.timestamp - a.timestamp));
+        localStorage.setItem('dailyReports', JSON.stringify(reports));
+        alert(`Đã lưu báo cáo ngày ${date}`);
+        renderHistory();
+    }
+    
+    function renderHistory() {
+        const reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        const container = document.getElementById('historyList');
+        if(reports.length === 0) {
+            container.innerHTML = 'Chưa có báo cáo nào';
+            return;
+        }
+        let html = '';
+        reports.forEach(r => {
+            html += `<div class="report-item">
+                        <div class="date-badge">📅 ${r.date}</div>
+                        <details>
+                            <summary>Xem nội dung</summary>
+                            <strong>Nội dung ngày:</strong><br>${r.dailyContent.replace(/\n/g,'<br>') || '---'}<br>
+                            <strong>❌ Chưa làm:</strong><br>${r.notDone.replace(/\n/g,'<br>') || '---'}<br>
+                            <strong>✅ Đã làm:</strong><br>${r.done.replace(/\n/g,'<br>') || '---'}<br>
+                            <strong>❓ Câu hỏi & TL:</strong><br>${r.questions.replace(/\n/g,'<br>') || '---'}<br>
+                            <strong>📖 Pháp:</strong><br>${r.dharma.replace(/\n/g,'<br>') || '---'}<br>
+                        </details>
+                        <button class="loadReportBtn" data-date="${r.date}">📂 Tải lên form</button>
+                     </div>`;
+        });
+        container.innerHTML = html;
+        // gắn sự kiện load lại báo cáo
+        document.querySelectorAll('.loadReportBtn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const date = btn.getAttribute('data-date');
+                loadReportToForm(date);
+            });
+        });
+    }
+    
+    function loadReportToForm(date) {
+        const reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        const report = reports.find(r => r.date === date);
+        if(report) {
+            document.getElementById('reportDate').value = report.date;
+            document.getElementById('dailyContent').value = report.dailyContent;
+            document.getElementById('notDone').value = report.notDone;
+            document.getElementById('done').value = report.done;
+            document.getElementById('questions').value = report.questions;
+            document.getElementById('dharma').value = report.dharma;
+            alert(`Đã tải báo cáo ngày ${date} lên form, bạn có thể chỉnh sửa và lưu lại.`);
+        } else alert('Không tìm thấy');
+    }
+    
+    function clearForm() {
+        document.getElementById('dailyContent').value = '';
+        document.getElementById('notDone').value = '';
+        document.getElementById('done').value = '';
+        document.getElementById('questions').value = '';
+        document.getElementById('dharma').value = '';
+        document.getElementById('reportDate').value = getTodayString();
+    }
+    
+    function clearAllHistory() {
+        if(confirm('Xoá toàn bộ lịch sử? Không thể khôi phục.')) {
+            localStorage.removeItem('dailyReports');
+            renderHistory();
+            clearForm();
+            alert('Đã xoá hết');
+        }
+    }
+    
+    document.getElementById('saveBtn').addEventListener('click', saveReport);
+    document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+    document.getElementById('toggleHistory').addEventListener('click', () => {
+        const panel = document.getElementById('historyPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        if(panel.style.display === 'block') renderHistory();
+    });
+    document.getElementById('clearHistoryBtn').addEventListener('click', clearAllHistory);
+    // hiển thị lịch sử nếu có dữ liệu cũ
+    if(localStorage.getItem('dailyReports')) renderHistory();
+</script>
+</body>
+</html>
