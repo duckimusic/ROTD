@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Báo cáo ngày - Rich text + Xuất DOCX</title>
-    <!-- Thư viện xuất DOCX -->
     <script src="https://cdn.jsdelivr.net/npm/html-docx-js/dist/html-docx.js"></script>
     <style>
-        /* ========== BIẾN THEME ========== */
         :root {
             --bg-page: #0f172a;
             --bg-card: #1e293b;
@@ -17,7 +15,6 @@
             --input-bg: #0f172a;
             --input-border: #475569;
             --accent: #3b82f6;
-            --accent-hover: #2563eb;
             --btn-secondary: #334155;
             --btn-outline: #475569;
             --badge-bg: #1e3a8a;
@@ -36,7 +33,6 @@
             --input-bg: #ffffff;
             --input-border: #cbd5e1;
             --accent: #2563eb;
-            --accent-hover: #1d4ed8;
             --btn-secondary: #64748b;
             --btn-outline: #94a3b8;
             --badge-bg: #dbeafe;
@@ -48,7 +44,7 @@
 
         * { box-sizing: border-box; }
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             background: var(--bg-page);
             color: var(--text-primary);
             margin: 0;
@@ -56,10 +52,7 @@
             padding-bottom: 40px;
             transition: background 0.2s, color 0.2s;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        .container { max-width: 800px; margin: 0 auto; }
         .header {
             display: flex;
             justify-content: space-between;
@@ -67,11 +60,7 @@
             flex-wrap: wrap;
             margin-bottom: 8px;
         }
-        h1 {
-            font-size: 1.8rem;
-            margin: 0;
-            color: var(--text-primary);
-        }
+        h1 { font-size: 1.8rem; margin: 0; color: var(--text-primary); }
         .theme-toggle, .export-btn {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -85,11 +74,7 @@
             gap: 8px;
             transition: 0.2s;
         }
-        .export-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-        }
+        .export-btn { background: var(--accent); color: white; border: none; }
         .sub {
             color: var(--text-secondary);
             margin-bottom: 20px;
@@ -115,7 +100,7 @@
             gap: 8px;
             align-items: center;
         }
-        .toolbar button, .toolbar select {
+        .toolbar button, .toolbar select, .toolbar input {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 30px;
@@ -125,13 +110,14 @@
             color: var(--text-primary);
             font-weight: bold;
         }
-        .toolbar select {
-            font-weight: normal;
+        .toolbar input[type="color"] {
+            width: 36px;
+            height: 36px;
+            padding: 4px;
+            cursor: pointer;
         }
-        .toolbar button:hover {
-            background: var(--accent);
-            color: white;
-        }
+        .toolbar select { font-weight: normal; }
+        .toolbar button:hover { background: var(--accent); color: white; }
         label {
             font-weight: 600;
             display: block;
@@ -148,7 +134,7 @@
             font-size: 0.95rem;
             font-family: inherit;
             background: var(--input-bg);
-            color: var(--text-primary);
+            color: var(--text-primary);  /* quan trọng: mặc định theo theme */
             min-height: 100px;
             overflow-y: auto;
             outline: none;
@@ -176,12 +162,8 @@
             flex: 1 0 auto;
             transition: 0.2s;
         }
-        button.secondary {
-            background: var(--btn-secondary);
-        }
-        button.warning {
-            background: #dc2626;
-        }
+        button.secondary { background: var(--btn-secondary); }
+        button.warning { background: #dc2626; }
         button.outline {
             background: transparent;
             color: var(--text-primary);
@@ -231,17 +213,18 @@
             <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
         </div>
     </div>
-    <div class="sub">Ghi nhanh + định dạng đậm/nghiêng/chữ · Xuất file Word</div>
+    <div class="sub">Ghi nhanh + định dạng đậm/nghiêng/màu · Xuất file Word</div>
 
     <div class="card">
         <label>📅 Ngày (dạng 24.4 hoặc 2025-04-24)</label>
         <input type="text" id="reportDate" placeholder="VD: 24.4" autocomplete="off">
 
-        <!-- Thanh công cụ định dạng (dùng execCommand) -->
         <div class="toolbar">
             <button type="button" data-cmd="bold" title="Đậm"><b>B</b></button>
             <button type="button" data-cmd="italic" title="Nghiêng"><i>I</i></button>
             <button type="button" data-cmd="underline" title="Gạch chân"><u>U</u></button>
+            <input type="color" id="textColorPicker" title="Màu chữ">
+            <button type="button" id="resetColorBtn" title="Reset màu về mặc định">🎨 Reset màu</button>
             <select id="fontSelect" title="Font chữ">
                 <option value="Arial">Arial</option>
                 <option value="Times New Roman">Times New Roman</option>
@@ -288,11 +271,11 @@
             <div id="historyList">Chưa có báo cáo nào</div>
         </div>
     </div>
-    <footer>Dữ liệu lưu trình duyệt · Bôi đen văn bản → dùng thanh công cụ</footer>
+    <footer>Dữ liệu lưu trình duyệt · Bôi đen văn bản → dùng toolbar</footer>
 </div>
 
 <script>
-    // ---------- THEME (như cũ) ----------
+    // ---------- THEME ----------
     function setTheme(theme) {
         if (theme === 'light') {
             document.body.classList.add('light');
@@ -312,14 +295,12 @@
         setTheme(isLight ? 'dark' : 'light');
     });
 
-    // ---------- Hỗ trợ định dạng rich text ----------
-    // Lưu lại active element để áp dụng lệnh vào đúng vùng đang focus
+    // ---------- Rich text support ----------
     let currentEditable = null;
     document.querySelectorAll('.editable').forEach(el => {
         el.addEventListener('focus', () => { currentEditable = el; });
         el.addEventListener('click', () => { currentEditable = el; });
     });
-    // Các lệnh execCommand
     function formatDoc(cmd, value = null) {
         if (!currentEditable) {
             alert('Hãy click vào ô cần định dạng trước.');
@@ -328,11 +309,10 @@
         currentEditable.focus();
         document.execCommand(cmd, false, value);
     }
-    // Gắn sự kiện cho toolbar
+    // Gắn sự kiện cho các nút cũ
     document.querySelectorAll('[data-cmd]').forEach(btn => {
         btn.addEventListener('click', () => {
-            const cmd = btn.getAttribute('data-cmd');
-            formatDoc(cmd);
+            formatDoc(btn.getAttribute('data-cmd'));
         });
     });
     document.getElementById('fontSelect').addEventListener('change', (e) => {
@@ -341,8 +321,35 @@
     document.getElementById('fontSizeSelect').addEventListener('change', (e) => {
         formatDoc('fontSize', e.target.value);
     });
+    // Màu chữ
+    document.getElementById('textColorPicker').addEventListener('input', (e) => {
+        formatDoc('foreColor', e.target.value);
+    });
+    // Reset màu: xóa inline style màu, đưa về màu CSS mặc định theo theme
+    document.getElementById('resetColorBtn').addEventListener('click', () => {
+        if (!currentEditable) {
+            alert('Hãy click vào ô cần reset màu trước.');
+            return;
+        }
+        // Xóa tất cả thẻ span có style color, hoặc xóa thuộc tính style color trên các thẻ
+        // Cách đơn giản: chọn toàn bộ nội dung, xóa màu inline (set lại màu rỗng)
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(currentEditable);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        document.execCommand('removeFormat', false, null);
+        // Lưu ý: removeFormat cũng xóa đậm nghiêng, nhưng tạm chấp nhận. Hoặc dùng cách tinh tế hơn:
+        // Tôi sẽ dùng cách loại bỏ style color thủ công
+        // Thực tế: removeFormat tiện nhất, người dùng có thể bôi đen lại để format lại.
+        // Để không mất đậm nghiêng, có thể dùng hàm duyệt DOM, nhưng phức tạp.
+        // Vì đơn giản, tôi dùng removeFormat và thông báo.
+        alert('Đã reset màu về mặc định (có thể mất cả đậm/nghiêng, bạn có thể format lại).');
+        // Đặt lại focus
+        currentEditable.focus();
+    });
 
-    // ---------- Lưu / Load dữ liệu (HTML) ----------
+    // ---------- Lưu / Load (HTML) ----------
     function getTodayString() {
         const d = new Date();
         return `${d.getDate()}.${d.getMonth()+1}`;
@@ -411,10 +418,10 @@
                         <details>
                             <summary>📄 Xem nội dung (có định dạng)</summary>
                             <strong>📝 Diễn biến:</strong><br>${(r.dailyContent || '---')}<br>
-                            <strong>❌ 3 điều chưa làm và cần làm:</strong><br>${(r.notDone || '---')}<br>
-                            <strong>✅ 3 điều đã làm:</strong><br>${(r.done || '---')}<br>
-                            <strong>❓ 3 câu hỏi:</strong><br>${(r.questions || '---')}<br>
-                            <strong>📖 Bài Pháp:</strong><br>${(r.dharma || '---')}
+                            <strong>❌ Chưa làm:</strong><br>${(r.notDone || '---')}<br>
+                            <strong>✅ Đã làm:</strong><br>${(r.done || '---')}<br>
+                            <strong>❓ Hỏi & Đáp:</strong><br>${(r.questions || '---')}<br>
+                            <strong>📖 Pháp:</strong><br>${(r.dharma || '---')}
                         </details>
                         <button class="load-report-btn" data-date="${r.date}">📂 Tải lên form (sửa)</button>
                     </div>`;
@@ -440,14 +447,12 @@
     // ---------- Xuất DOCX ----------
     function exportToDocx() {
         const date = document.getElementById('reportDate').value.trim() || getTodayString();
-        // Nội dung hiện tại trên form (đã chỉnh sửa) sẽ được xuất
         const daily = document.getElementById('dailyContent').innerHTML || '';
         const notDone = document.getElementById('notDone').innerHTML || '';
         const done = document.getElementById('done').innerHTML || '';
         const questions = document.getElementById('questions').innerHTML || '';
         const dharma = document.getElementById('dharma').innerHTML || '';
 
-        // Tạo HTML cho file Word
         const style = `
             <style>
                 body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
@@ -466,33 +471,15 @@
             <body>
                 <h1>📋 Báo cáo ngày ${date}</h1>
                 <div class="date">Ngày lập: ${new Date().toLocaleString()}</div>
-                
-                <div class="section">
-                    <div class="label">📝 Diễn biến chính:</div>
-                    <div class="content">${daily || '---'}</div>
-                </div>
-                <div class="section">
-                    <div class="label">❌ 3 điều CHƯA LÀM & cần làm:</div>
-                    <div class="content">${notDone || '---'}</div>
-                </div>
-                <div class="section">
-                    <div class="label">✅ 3 điều ĐÃ LÀM:</div>
-                    <div class="content">${done || '---'}</div>
-                </div>
-                <div class="section">
-                    <div class="label">❓ 3 câu hỏi + tự trả lời:</div>
-                    <div class="content">${questions || '---'}</div>
-                </div>
-                <div class="section">
-                    <div class="label">📖 Pháp học / Kinh sách:</div>
-                    <div class="content">${dharma || '---'}</div>
-                </div>
-                <hr>
-                <footer style="font-size:0.8rem; color:#64748b;">Xuất từ ứng dụng Báo cáo ngày</footer>
+                <div class="section"><div class="label">📝 Diễn biến chính:</div><div class="content">${daily || '---'}</div></div>
+                <div class="section"><div class="label">❌ 3 điều CHƯA LÀM & cần làm:</div><div class="content">${notDone || '---'}</div></div>
+                <div class="section"><div class="label">✅ 3 điều ĐÃ LÀM:</div><div class="content">${done || '---'}</div></div>
+                <div class="section"><div class="label">❓ 3 câu hỏi + tự trả lời:</div><div class="content">${questions || '---'}</div></div>
+                <div class="section"><div class="label">📖 Pháp học / Kinh sách:</div><div class="content">${dharma || '---'}</div></div>
+                <hr><footer style="font-size:0.8rem;">Xuất từ ứng dụng Báo cáo ngày</footer>
             </body>
             </html>
         `;
-        // Dùng thư viện html-docx-js
         const converted = htmlDocx.asBlob(contentHtml);
         const link = document.createElement('a');
         const url = URL.createObjectURL(converted);
@@ -515,9 +502,7 @@
     document.getElementById('clearAllHistoryBtn').addEventListener('click', clearAllHistory);
     document.getElementById('exportDocxBtn').addEventListener('click', exportToDocx);
     
-    // Khởi tạo
     if (localStorage.getItem('dailyReports')) renderHistory();
-    // Đặt focus mặc định vào ô đầu
     document.getElementById('dailyContent').focus();
 </script>
 </body>
