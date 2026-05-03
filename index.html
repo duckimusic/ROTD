@@ -411,10 +411,10 @@
                         <details>
                             <summary>📄 Xem nội dung (có định dạng)</summary>
                             <strong>📝 Diễn biến:</strong><br>${(r.dailyContent || '---')}<br>
-                            <strong>❌ Chưa làm:</strong><br>${(r.notDone || '---')}<br>
-                            <strong>✅ Đã làm:</strong><br>${(r.done || '---')}<br>
-                            <strong>❓ Hỏi & Đáp:</strong><br>${(r.questions || '---')}<br>
-                            <strong>📖 Pháp:</strong><br>${(r.dharma || '---')}
+                            <strong>❌ 3 điều chưa làm và cần làm:</strong><br>${(r.notDone || '---')}<br>
+                            <strong>✅ 3 điều đã làm:</strong><br>${(r.done || '---')}<br>
+                            <strong>❓ 3 câu hỏi:</strong><br>${(r.questions || '---')}<br>
+                            <strong>📖 Bài Pháp:</strong><br>${(r.dharma || '---')}
                         </details>
                         <button class="load-report-btn" data-date="${r.date}">📂 Tải lên form (sửa)</button>
                     </div>`;
