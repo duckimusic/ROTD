@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Báo cáo ngày - Ghi nhanh</title>
+    <title>Báo cáo ngày - Rich text + Xuất DOCX</title>
+    <!-- Thư viện xuất DOCX -->
+    <script src="https://cdn.jsdelivr.net/npm/html-docx-js/dist/html-docx.js"></script>
     <style>
         /* ========== BIẾN THEME ========== */
         :root {
@@ -22,6 +24,7 @@
             --badge-text: #93c5fd;
             --footer: #64748b;
             --shadow: rgba(0,0,0,0.3);
+            --toolbar-bg: #2d3a4b;
         }
 
         body.light {
@@ -40,6 +43,7 @@
             --badge-text: #1e40af;
             --footer: #475569;
             --shadow: rgba(0,0,0,0.05);
+            --toolbar-bg: #e2e8f0;
         }
 
         * { box-sizing: border-box; }
@@ -53,10 +57,9 @@
             transition: background 0.2s, color 0.2s;
         }
         .container {
-            max-width: 700px;
+            max-width: 800px;
             margin: 0 auto;
         }
-        /* header + theme toggle */
         .header {
             display: flex;
             justify-content: space-between;
@@ -68,11 +71,8 @@
             font-size: 1.8rem;
             margin: 0;
             color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-        .theme-toggle {
+        .theme-toggle, .export-btn {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 40px;
@@ -80,13 +80,15 @@
             cursor: pointer;
             font-size: 0.9rem;
             color: var(--text-primary);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             transition: 0.2s;
         }
-        .theme-toggle:hover {
-            background: var(--btn-secondary);
+        .export-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
         }
         .sub {
             color: var(--text-secondary);
@@ -103,15 +105,42 @@
             box-shadow: 0 2px 8px var(--shadow);
             border: 1px solid var(--border);
         }
+        .toolbar {
+            background: var(--toolbar-bg);
+            padding: 8px 12px;
+            border-radius: 40px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .toolbar button, .toolbar select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-weight: bold;
+        }
+        .toolbar select {
+            font-weight: normal;
+        }
+        .toolbar button:hover {
+            background: var(--accent);
+            color: white;
+        }
         label {
             font-weight: 600;
             display: block;
-            margin-top: 12px;
+            margin-top: 16px;
             margin-bottom: 6px;
             color: var(--text-primary);
             font-size: 0.9rem;
         }
-        input, textarea {
+        .editable {
             width: 100%;
             padding: 12px;
             border: 1px solid var(--input-border);
@@ -120,16 +149,14 @@
             font-family: inherit;
             background: var(--input-bg);
             color: var(--text-primary);
-            transition: 0.2s;
-        }
-        input:focus, textarea:focus {
+            min-height: 100px;
+            overflow-y: auto;
             outline: none;
+            line-height: 1.5;
+        }
+        .editable:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
-        }
-        textarea {
-            min-height: 90px;
-            resize: vertical;
         }
         .button-group {
             display: flex;
@@ -148,10 +175,6 @@
             cursor: pointer;
             flex: 1 0 auto;
             transition: 0.2s;
-        }
-        button:hover {
-            filter: brightness(1.05);
-            transform: scale(0.98);
         }
         button.secondary {
             background: var(--btn-secondary);
@@ -191,54 +214,63 @@
             color: var(--accent);
             margin: 8px 0;
         }
-        .load-btn {
-            background: none;
-            border: none;
-            color: var(--accent);
-            font-weight: 500;
-            padding: 6px 0;
-            font-size: 0.8rem;
-            margin-top: 6px;
-            text-decoration: underline;
-            cursor: pointer;
-        }
         footer {
             font-size: 0.7rem;
             text-align: center;
             color: var(--footer);
             margin-top: 30px;
         }
-        hr {
-            border-color: var(--border);
-        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>📋 Báo cáo ngày</h1>
-        <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
+        <h1>📋 Báo cáo ngày (Rich Text)</h1>
+        <div>
+            <button class="export-btn" id="exportDocxBtn">📄 Xuất DOCX</button>
+            <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
+        </div>
     </div>
-    <div class="sub">Ghi nhanh · 3 điều đã làm · 3 điều chưa làm · câu hỏi & pháp</div>
+    <div class="sub">Ghi nhanh + định dạng đậm/nghiêng/chữ · Xuất file Word</div>
 
     <div class="card">
         <label>📅 Ngày (dạng 24.4 hoặc 2025-04-24)</label>
         <input type="text" id="reportDate" placeholder="VD: 24.4" autocomplete="off">
 
+        <!-- Thanh công cụ định dạng (dùng execCommand) -->
+        <div class="toolbar">
+            <button type="button" data-cmd="bold" title="Đậm"><b>B</b></button>
+            <button type="button" data-cmd="italic" title="Nghiêng"><i>I</i></button>
+            <button type="button" data-cmd="underline" title="Gạch chân"><u>U</u></button>
+            <select id="fontSelect" title="Font chữ">
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</option>
+            </select>
+            <select id="fontSizeSelect" title="Cỡ chữ">
+                <option value="1">Nhỏ</option>
+                <option value="3" selected>Vừa</option>
+                <option value="5">Lớn</option>
+                <option value="7">Rất lớn</option>
+            </select>
+        </div>
+
         <label>📝 Diễn biến chính trong ngày</label>
-        <textarea id="dailyContent" placeholder="Hôm nay hút 5 điếu, chiều dậy đánh răng, gửi plan..."></textarea>
+        <div id="dailyContent" class="editable" contenteditable="true"></div>
 
         <label>❌ 3 điều CHƯA LÀM & cần làm</label>
-        <textarea id="notDone" placeholder="1. Chưa nghe thêm kinh Pháp Cú...&#10;2. Chưa luyện ngữ pháp mới cho Cún...&#10;3. Vẫn viết báo cáo chậm..."></textarea>
+        <div id="notDone" class="editable" contenteditable="true"></div>
 
         <label>✅ 3 điều ĐÃ LÀM</label>
-        <textarea id="done" placeholder="1. Kiểm tra ngữ pháp cho Minh...&#10;2. Luyện Science cho Xí Muội...&#10;3. Ôn bài cho HS trung tâm..."></textarea>
+        <div id="done" class="editable" contenteditable="true"></div>
 
         <label>❓ 3 câu hỏi + tự trả lời</label>
-        <textarea id="questions" placeholder="Q1: Làm sao duy trì cho 2 đứa sinh đôi?...&#10;A1: Khi 1 đứa không bắt kịp, cho đứa kia luyện kỹ năng chậm...&#10;&#10;Q2: Vì sao khó viết nhanh?...&#10;A2: Chưa luyện viết dài, cần thói quen..."></textarea>
+        <div id="questions" class="editable" contenteditable="true"></div>
 
         <label>📖 Pháp học / Kinh sách (tuỳ chọn)</label>
-        <textarea id="dharma" placeholder="Kinh Mi Tiên Vấn Đáp - Phần 2 (3:33:14 - 4:06:06)&#10;Thất giác chi, nhân duyên giác ngộ..."></textarea>
+        <div id="dharma" class="editable" contenteditable="true"></div>
 
         <div class="button-group">
             <button id="saveBtn">💾 Lưu báo cáo</button>
@@ -252,15 +284,15 @@
 
     <div id="historyPanel" style="display: none;">
         <div class="history-panel">
-            <h3 style="margin-top:0">📚 Lịch sử báo cáo</h3>
+            <h3 style="margin-top:0">📚 Lịch sử báo cáo (có định dạng)</h3>
             <div id="historyList">Chưa có báo cáo nào</div>
         </div>
     </div>
-    <footer>Dữ liệu lưu trong trình duyệt · Tự động lưu theme 🌗</footer>
+    <footer>Dữ liệu lưu trình duyệt · Bôi đen văn bản → dùng thanh công cụ</footer>
 </div>
 
 <script>
-    // ========== THEME ==========
+    // ---------- THEME (như cũ) ----------
     function setTheme(theme) {
         if (theme === 'light') {
             document.body.classList.add('light');
@@ -272,22 +304,45 @@
             document.getElementById('themeToggle').innerHTML = '🌙 Dark';
         }
     }
-
-    function toggleTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') setTheme('light');
+    else setTheme('dark');
+    document.getElementById('themeToggle').addEventListener('click', () => {
         const isLight = document.body.classList.contains('light');
         setTheme(isLight ? 'dark' : 'light');
-    }
+    });
 
-    // Khởi tạo theme: mặc định dark, nhưng nếu có lưu thì theo lưu
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-        setTheme('light');
-    } else {
-        setTheme('dark');   // mặc định dark
+    // ---------- Hỗ trợ định dạng rich text ----------
+    // Lưu lại active element để áp dụng lệnh vào đúng vùng đang focus
+    let currentEditable = null;
+    document.querySelectorAll('.editable').forEach(el => {
+        el.addEventListener('focus', () => { currentEditable = el; });
+        el.addEventListener('click', () => { currentEditable = el; });
+    });
+    // Các lệnh execCommand
+    function formatDoc(cmd, value = null) {
+        if (!currentEditable) {
+            alert('Hãy click vào ô cần định dạng trước.');
+            return;
+        }
+        currentEditable.focus();
+        document.execCommand(cmd, false, value);
     }
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    // Gắn sự kiện cho toolbar
+    document.querySelectorAll('[data-cmd]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const cmd = btn.getAttribute('data-cmd');
+            formatDoc(cmd);
+        });
+    });
+    document.getElementById('fontSelect').addEventListener('change', (e) => {
+        formatDoc('fontName', e.target.value);
+    });
+    document.getElementById('fontSizeSelect').addEventListener('change', (e) => {
+        formatDoc('fontSize', e.target.value);
+    });
 
-    // ========== APP LOGIC ==========
+    // ---------- Lưu / Load dữ liệu (HTML) ----------
     function getTodayString() {
         const d = new Date();
         return `${d.getDate()}.${d.getMonth()+1}`;
@@ -299,11 +354,11 @@
         if (!date) { alert('Vui lòng nhập ngày'); return; }
         const report = {
             date: date,
-            dailyContent: document.getElementById('dailyContent').value,
-            notDone: document.getElementById('notDone').value,
-            done: document.getElementById('done').value,
-            questions: document.getElementById('questions').value,
-            dharma: document.getElementById('dharma').value,
+            dailyContent: document.getElementById('dailyContent').innerHTML,
+            notDone: document.getElementById('notDone').innerHTML,
+            done: document.getElementById('done').innerHTML,
+            questions: document.getElementById('questions').innerHTML,
+            dharma: document.getElementById('dharma').innerHTML,
             timestamp: Date.now()
         };
         let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
@@ -314,6 +369,32 @@
         localStorage.setItem('dailyReports', JSON.stringify(reports));
         alert(`✅ Đã lưu ngày ${date}`);
         renderHistory();
+    }
+
+    function loadReportToForm(date) {
+        const reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        const report = reports.find(r => r.date === date);
+        if (report) {
+            document.getElementById('reportDate').value = report.date;
+            document.getElementById('dailyContent').innerHTML = report.dailyContent || '';
+            document.getElementById('notDone').innerHTML = report.notDone || '';
+            document.getElementById('done').innerHTML = report.done || '';
+            document.getElementById('questions').innerHTML = report.questions || '';
+            document.getElementById('dharma').innerHTML = report.dharma || '';
+            alert(`📂 Đã tải báo cáo ngày ${date} lên form, bạn có thể chỉnh sửa và lưu lại.`);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            alert('Không tìm thấy báo cáo');
+        }
+    }
+
+    function clearForm() {
+        document.getElementById('dailyContent').innerHTML = '';
+        document.getElementById('notDone').innerHTML = '';
+        document.getElementById('done').innerHTML = '';
+        document.getElementById('questions').innerHTML = '';
+        document.getElementById('dharma').innerHTML = '';
+        document.getElementById('reportDate').value = getTodayString();
     }
 
     function renderHistory() {
@@ -328,12 +409,12 @@
             html += `<div class="report-item">
                         <div class="date-badge">📅 ${r.date}</div>
                         <details>
-                            <summary>📄 Xem nội dung</summary>
-                            <strong>📝 Diễn biến:</strong><br>${(r.dailyContent || '---').replace(/\n/g,'<br>')}<br>
-                            <strong>❌ Chưa làm:</strong><br>${(r.notDone || '---').replace(/\n/g,'<br>')}<br>
-                            <strong>✅ Đã làm:</strong><br>${(r.done || '---').replace(/\n/g,'<br>')}<br>
-                            <strong>❓ Hỏi & Đáp:</strong><br>${(r.questions || '---').replace(/\n/g,'<br>')}<br>
-                            <strong>📖 Pháp:</strong><br>${(r.dharma || '---').replace(/\n/g,'<br>')}
+                            <summary>📄 Xem nội dung (có định dạng)</summary>
+                            <strong>📝 Diễn biến:</strong><br>${(r.dailyContent || '---')}<br>
+                            <strong>❌ Chưa làm:</strong><br>${(r.notDone || '---')}<br>
+                            <strong>✅ Đã làm:</strong><br>${(r.done || '---')}<br>
+                            <strong>❓ Hỏi & Đáp:</strong><br>${(r.questions || '---')}<br>
+                            <strong>📖 Pháp:</strong><br>${(r.dharma || '---')}
                         </details>
                         <button class="load-report-btn" data-date="${r.date}">📂 Tải lên form (sửa)</button>
                     </div>`;
@@ -347,32 +428,6 @@
         });
     }
 
-    function loadReportToForm(date) {
-        const reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
-        const report = reports.find(r => r.date === date);
-        if (report) {
-            document.getElementById('reportDate').value = report.date;
-            document.getElementById('dailyContent').value = report.dailyContent;
-            document.getElementById('notDone').value = report.notDone;
-            document.getElementById('done').value = report.done;
-            document.getElementById('questions').value = report.questions;
-            document.getElementById('dharma').value = report.dharma;
-            alert(`📂 Đã tải báo cáo ngày ${date} lên form, bạn có thể chỉnh sửa và lưu lại.`);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            alert('Không tìm thấy báo cáo');
-        }
-    }
-
-    function clearForm() {
-        document.getElementById('dailyContent').value = '';
-        document.getElementById('notDone').value = '';
-        document.getElementById('done').value = '';
-        document.getElementById('questions').value = '';
-        document.getElementById('dharma').value = '';
-        document.getElementById('reportDate').value = getTodayString();
-    }
-
     function clearAllHistory() {
         if (confirm('⚠️ Xoá TOÀN BỘ lịch sử? Hành động không thể khôi phục.')) {
             localStorage.removeItem('dailyReports');
@@ -380,6 +435,73 @@
             clearForm();
             alert('Đã xoá hết dữ liệu');
         }
+    }
+
+    // ---------- Xuất DOCX ----------
+    function exportToDocx() {
+        const date = document.getElementById('reportDate').value.trim() || getTodayString();
+        // Nội dung hiện tại trên form (đã chỉnh sửa) sẽ được xuất
+        const daily = document.getElementById('dailyContent').innerHTML || '';
+        const notDone = document.getElementById('notDone').innerHTML || '';
+        const done = document.getElementById('done').innerHTML || '';
+        const questions = document.getElementById('questions').innerHTML || '';
+        const dharma = document.getElementById('dharma').innerHTML || '';
+
+        // Tạo HTML cho file Word
+        const style = `
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                h1 { color: #1e293b; }
+                h2 { color: #0f172a; margin-top: 20px; border-left: 4px solid #3b82f6; padding-left: 12px; }
+                .section { margin-bottom: 24px; }
+                .label { font-weight: bold; font-size: 1.1em; margin-bottom: 6px; color: #2563eb; }
+                .content { margin-left: 12px; }
+                .date { font-size: 0.9em; color: #475569; margin-bottom: 20px; }
+            </style>
+        `;
+        const contentHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><title>Báo cáo ngày ${date}</title>${style}</head>
+            <body>
+                <h1>📋 Báo cáo ngày ${date}</h1>
+                <div class="date">Ngày lập: ${new Date().toLocaleString()}</div>
+                
+                <div class="section">
+                    <div class="label">📝 Diễn biến chính:</div>
+                    <div class="content">${daily || '---'}</div>
+                </div>
+                <div class="section">
+                    <div class="label">❌ 3 điều CHƯA LÀM & cần làm:</div>
+                    <div class="content">${notDone || '---'}</div>
+                </div>
+                <div class="section">
+                    <div class="label">✅ 3 điều ĐÃ LÀM:</div>
+                    <div class="content">${done || '---'}</div>
+                </div>
+                <div class="section">
+                    <div class="label">❓ 3 câu hỏi + tự trả lời:</div>
+                    <div class="content">${questions || '---'}</div>
+                </div>
+                <div class="section">
+                    <div class="label">📖 Pháp học / Kinh sách:</div>
+                    <div class="content">${dharma || '---'}</div>
+                </div>
+                <hr>
+                <footer style="font-size:0.8rem; color:#64748b;">Xuất từ ứng dụng Báo cáo ngày</footer>
+            </body>
+            </html>
+        `;
+        // Dùng thư viện html-docx-js
+        const converted = htmlDocx.asBlob(contentHtml);
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(converted);
+        link.href = url;
+        link.download = `baocao_ngay_${date}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 
     // Gắn sự kiện
@@ -391,10 +513,12 @@
         if (panel.style.display === 'block') renderHistory();
     });
     document.getElementById('clearAllHistoryBtn').addEventListener('click', clearAllHistory);
+    document.getElementById('exportDocxBtn').addEventListener('click', exportToDocx);
     
-    if (localStorage.getItem('dailyReports')) {
-        renderHistory();
-    }
+    // Khởi tạo
+    if (localStorage.getItem('dailyReports')) renderHistory();
+    // Đặt focus mặc định vào ô đầu
+    document.getElementById('dailyContent').focus();
 </script>
 </body>
 </html>
