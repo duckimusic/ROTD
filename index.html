@@ -2,64 +2,301 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Báo cáo ngày - Ghi nhanh</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; background: #f9f9f9; }
-        h1 { color: #2c3e50; }
-        label, .section-title { font-weight: bold; margin-top: 15px; display: block; }
-        input, textarea { width: 100%; margin: 5px 0 10px; padding: 8px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
-        textarea { min-height: 80px; }
-        button { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-right: 10px; }
-        button:hover { background: #1e2b36; }
-        .history { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-        .report-item { border-bottom: 1px solid #ddd; padding: 10px 0; }
-        .date-badge { background: #3498db; color: white; display: inline-block; padding: 4px 8px; border-radius: 15px; font-size: 12px; }
-        hr { margin: 20px 0; }
+        /* ========== BIẾN THEME ========== */
+        :root {
+            --bg-page: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #334155;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --btn-secondary: #334155;
+            --btn-outline: #475569;
+            --badge-bg: #1e3a8a;
+            --badge-text: #93c5fd;
+            --footer: #64748b;
+            --shadow: rgba(0,0,0,0.3);
+        }
+
+        body.light {
+            --bg-page: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --border: #e2e8f0;
+            --input-bg: #ffffff;
+            --input-border: #cbd5e1;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --btn-secondary: #64748b;
+            --btn-outline: #94a3b8;
+            --badge-bg: #dbeafe;
+            --badge-text: #1e40af;
+            --footer: #475569;
+            --shadow: rgba(0,0,0,0.05);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-page);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 16px;
+            padding-bottom: 40px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        /* header + theme toggle */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin: 0;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .theme-toggle:hover {
+            background: var(--btn-secondary);
+        }
+        .sub {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            border-left: 3px solid var(--accent);
+            padding-left: 12px;
+            font-size: 0.9rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px var(--shadow);
+            border: 1px solid var(--border);
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 16px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            transition: 0.2s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 20px 0 10px;
+        }
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            flex: 1 0 auto;
+            transition: 0.2s;
+        }
+        button:hover {
+            filter: brightness(1.05);
+            transform: scale(0.98);
+        }
+        button.secondary {
+            background: var(--btn-secondary);
+        }
+        button.warning {
+            background: #dc2626;
+        }
+        button.outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--btn-outline);
+        }
+        .history-panel {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 16px;
+            margin-top: 12px;
+            border: 1px solid var(--border);
+        }
+        .report-item {
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+        }
+        .date-badge {
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        details summary {
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--accent);
+            margin: 8px 0;
+        }
+        .load-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-weight: 500;
+            padding: 6px 0;
+            font-size: 0.8rem;
+            margin-top: 6px;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            color: var(--footer);
+            margin-top: 30px;
+        }
+        hr {
+            border-color: var(--border);
+        }
     </style>
 </head>
 <body>
-<h1>📆 Báo cáo nhanh trong ngày</h1>
-<div>
-    <label>📅 Ngày (dd.mm hoặc yyyy-mm-dd):</label>
-    <input type="text" id="reportDate" placeholder="VD: 24.4 hoặc 2025-04-24" value="">
-    
-    <label>📝 Nội dung chính trong ngày:</label>
-    <textarea id="dailyContent" placeholder="Hôm nay hút 5 điếu, chiều dậy đánh răng..."></textarea>
-    
-    <label>❌ 3 điều CHƯA LÀM & cần làm (mỗi dòng 1 điều):</label>
-    <textarea id="notDone" placeholder="1. Chưa dành thời gian nghe thêm kinh...\n2. Chưa luyện bài mới cho Cún...\n3. Chưa tránh viết chậm báo cáo..."></textarea>
-    
-    <label>✅ 3 điều ĐÃ LÀM (mỗi dòng 1 điều):</label>
-    <textarea id="done" placeholder="1. Kiểm tra hết ngữ pháp cho Minh...\n2. Luyện Science cho Xí Muội...\n3. Ôn bài cho HS trung tâm..."></textarea>
-    
-    <label>❓ 3 câu hỏi + tự trả lời (mỗi câu cách nhau 2 dòng, Q và A rõ ràng):</label>
-    <textarea id="questions" placeholder="Q1: Làm sao duy trì cho 2 đứa sinh đôi cùng học?\nA1: Khi 1 đứa không bắt kịp, cho đứa kia luyện kỹ năng chậm...\n\nQ2: Vì sao khó viết nhanh?\nA2: Chưa luyện viết dài..."></textarea>
-    
-    <label>📖 Pháp học / Kinh sách (tuỳ chọn):</label>
-    <textarea id="dharma" placeholder="Kinh Mi Tiên Vấn Đáp - Phần 2 (3:33:14 - 4:06:06)\nNội dung ghi chép..."></textarea>
-    
-    <button id="saveBtn">💾 LƯU BÁO CÁO</button>
-    <button id="clearFormBtn">🧹 Xoá form</button>
-    <button id="toggleHistory">📋 Ẩn/Hiện lịch sử</button>
-</div>
+<div class="container">
+    <div class="header">
+        <h1>📋 Báo cáo ngày</h1>
+        <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
+    </div>
+    <div class="sub">Ghi nhanh · 3 điều đã làm · 3 điều chưa làm · câu hỏi & pháp</div>
 
-<div id="historyPanel" class="history" style="display: none;">
-    <h3>📚 Lịch sử báo cáo</h3>
-    <div id="historyList">Chưa có báo cáo nào</div>
-    <button id="clearHistoryBtn">🗑 Xoá toàn bộ lịch sử</button>
+    <div class="card">
+        <label>📅 Ngày (dạng 24.4 hoặc 2025-04-24)</label>
+        <input type="text" id="reportDate" placeholder="VD: 24.4" autocomplete="off">
+
+        <label>📝 Diễn biến chính trong ngày</label>
+        <textarea id="dailyContent" placeholder="Hôm nay hút 5 điếu, chiều dậy đánh răng, gửi plan..."></textarea>
+
+        <label>❌ 3 điều CHƯA LÀM & cần làm</label>
+        <textarea id="notDone" placeholder="1. Chưa nghe thêm kinh Pháp Cú...&#10;2. Chưa luyện ngữ pháp mới cho Cún...&#10;3. Vẫn viết báo cáo chậm..."></textarea>
+
+        <label>✅ 3 điều ĐÃ LÀM</label>
+        <textarea id="done" placeholder="1. Kiểm tra ngữ pháp cho Minh...&#10;2. Luyện Science cho Xí Muội...&#10;3. Ôn bài cho HS trung tâm..."></textarea>
+
+        <label>❓ 3 câu hỏi + tự trả lời</label>
+        <textarea id="questions" placeholder="Q1: Làm sao duy trì cho 2 đứa sinh đôi?...&#10;A1: Khi 1 đứa không bắt kịp, cho đứa kia luyện kỹ năng chậm...&#10;&#10;Q2: Vì sao khó viết nhanh?...&#10;A2: Chưa luyện viết dài, cần thói quen..."></textarea>
+
+        <label>📖 Pháp học / Kinh sách (tuỳ chọn)</label>
+        <textarea id="dharma" placeholder="Kinh Mi Tiên Vấn Đáp - Phần 2 (3:33:14 - 4:06:06)&#10;Thất giác chi, nhân duyên giác ngộ..."></textarea>
+
+        <div class="button-group">
+            <button id="saveBtn">💾 Lưu báo cáo</button>
+            <button id="clearFormBtn" class="outline">🧹 Xoá form</button>
+        </div>
+        <div class="button-group">
+            <button id="toggleHistoryBtn" class="secondary">📋 Xem / Ẩn lịch sử</button>
+            <button id="clearAllHistoryBtn" class="warning">🗑 Xoá toàn bộ</button>
+        </div>
+    </div>
+
+    <div id="historyPanel" style="display: none;">
+        <div class="history-panel">
+            <h3 style="margin-top:0">📚 Lịch sử báo cáo</h3>
+            <div id="historyList">Chưa có báo cáo nào</div>
+        </div>
+    </div>
+    <footer>Dữ liệu lưu trong trình duyệt · Tự động lưu theme 🌗</footer>
 </div>
 
 <script>
+    // ========== THEME ==========
+    function setTheme(theme) {
+        if (theme === 'light') {
+            document.body.classList.add('light');
+            localStorage.setItem('theme', 'light');
+            document.getElementById('themeToggle').innerHTML = '☀️ Light';
+        } else {
+            document.body.classList.remove('light');
+            localStorage.setItem('theme', 'dark');
+            document.getElementById('themeToggle').innerHTML = '🌙 Dark';
+        }
+    }
+
+    function toggleTheme() {
+        const isLight = document.body.classList.contains('light');
+        setTheme(isLight ? 'dark' : 'light');
+    }
+
+    // Khởi tạo theme: mặc định dark, nhưng nếu có lưu thì theo lưu
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        setTheme('light');
+    } else {
+        setTheme('dark');   // mặc định dark
+    }
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    // ========== APP LOGIC ==========
     function getTodayString() {
-        const today = new Date();
-        return `${today.getDate()}.${today.getMonth()+1}`;
+        const d = new Date();
+        return `${d.getDate()}.${d.getMonth()+1}`;
     }
     document.getElementById('reportDate').value = getTodayString();
-    
+
     function saveReport() {
         const date = document.getElementById('reportDate').value.trim();
-        if(!date) { alert('Vui lòng nhập ngày'); return; }
+        if (!date) { alert('Vui lòng nhập ngày'); return; }
         const report = {
             date: date,
             dailyContent: document.getElementById('dailyContent').value,
@@ -70,21 +307,20 @@
             timestamp: Date.now()
         };
         let reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
-        // ghi đè nếu đã có cùng ngày (hoặc bạn muốn giữ nhiều bản ghi cùng ngày? Ở đây ghi đè)
-        const index = reports.findIndex(r => r.date === date);
-        if(index !== -1) reports[index] = report;
-        else reports.push(report);
-        reports.sort((a,b) => (b.timestamp - a.timestamp));
+        const idx = reports.findIndex(r => r.date === date);
+        if (idx !== -1) reports[idx] = report;
+        else reports.unshift(report);
+        reports.sort((a,b) => b.timestamp - a.timestamp);
         localStorage.setItem('dailyReports', JSON.stringify(reports));
-        alert(`Đã lưu báo cáo ngày ${date}`);
+        alert(`✅ Đã lưu ngày ${date}`);
         renderHistory();
     }
-    
+
     function renderHistory() {
         const reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
         const container = document.getElementById('historyList');
-        if(reports.length === 0) {
-            container.innerHTML = 'Chưa có báo cáo nào';
+        if (!reports.length) {
+            container.innerHTML = '📭 Chưa có báo cáo nào';
             return;
         }
         let html = '';
@@ -92,40 +328,42 @@
             html += `<div class="report-item">
                         <div class="date-badge">📅 ${r.date}</div>
                         <details>
-                            <summary>Xem nội dung</summary>
-                            <strong>Nội dung ngày:</strong><br>${r.dailyContent.replace(/\n/g,'<br>') || '---'}<br>
-                            <strong>❌ Chưa làm:</strong><br>${r.notDone.replace(/\n/g,'<br>') || '---'}<br>
-                            <strong>✅ Đã làm:</strong><br>${r.done.replace(/\n/g,'<br>') || '---'}<br>
-                            <strong>❓ Câu hỏi & TL:</strong><br>${r.questions.replace(/\n/g,'<br>') || '---'}<br>
-                            <strong>📖 Pháp:</strong><br>${r.dharma.replace(/\n/g,'<br>') || '---'}<br>
+                            <summary>📄 Xem nội dung</summary>
+                            <strong>📝 Diễn biến:</strong><br>${(r.dailyContent || '---').replace(/\n/g,'<br>')}<br>
+                            <strong>❌ Chưa làm:</strong><br>${(r.notDone || '---').replace(/\n/g,'<br>')}<br>
+                            <strong>✅ Đã làm:</strong><br>${(r.done || '---').replace(/\n/g,'<br>')}<br>
+                            <strong>❓ Hỏi & Đáp:</strong><br>${(r.questions || '---').replace(/\n/g,'<br>')}<br>
+                            <strong>📖 Pháp:</strong><br>${(r.dharma || '---').replace(/\n/g,'<br>')}
                         </details>
-                        <button class="loadReportBtn" data-date="${r.date}">📂 Tải lên form</button>
-                     </div>`;
+                        <button class="load-report-btn" data-date="${r.date}">📂 Tải lên form (sửa)</button>
+                    </div>`;
         });
         container.innerHTML = html;
-        // gắn sự kiện load lại báo cáo
-        document.querySelectorAll('.loadReportBtn').forEach(btn => {
+        document.querySelectorAll('.load-report-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const date = btn.getAttribute('data-date');
                 loadReportToForm(date);
             });
         });
     }
-    
+
     function loadReportToForm(date) {
         const reports = JSON.parse(localStorage.getItem('dailyReports')) || [];
         const report = reports.find(r => r.date === date);
-        if(report) {
+        if (report) {
             document.getElementById('reportDate').value = report.date;
             document.getElementById('dailyContent').value = report.dailyContent;
             document.getElementById('notDone').value = report.notDone;
             document.getElementById('done').value = report.done;
             document.getElementById('questions').value = report.questions;
             document.getElementById('dharma').value = report.dharma;
-            alert(`Đã tải báo cáo ngày ${date} lên form, bạn có thể chỉnh sửa và lưu lại.`);
-        } else alert('Không tìm thấy');
+            alert(`📂 Đã tải báo cáo ngày ${date} lên form, bạn có thể chỉnh sửa và lưu lại.`);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            alert('Không tìm thấy báo cáo');
+        }
     }
-    
+
     function clearForm() {
         document.getElementById('dailyContent').value = '';
         document.getElementById('notDone').value = '';
@@ -134,26 +372,29 @@
         document.getElementById('dharma').value = '';
         document.getElementById('reportDate').value = getTodayString();
     }
-    
+
     function clearAllHistory() {
-        if(confirm('Xoá toàn bộ lịch sử? Không thể khôi phục.')) {
+        if (confirm('⚠️ Xoá TOÀN BỘ lịch sử? Hành động không thể khôi phục.')) {
             localStorage.removeItem('dailyReports');
             renderHistory();
             clearForm();
-            alert('Đã xoá hết');
+            alert('Đã xoá hết dữ liệu');
         }
     }
-    
+
+    // Gắn sự kiện
     document.getElementById('saveBtn').addEventListener('click', saveReport);
     document.getElementById('clearFormBtn').addEventListener('click', clearForm);
-    document.getElementById('toggleHistory').addEventListener('click', () => {
+    document.getElementById('toggleHistoryBtn').addEventListener('click', () => {
         const panel = document.getElementById('historyPanel');
         panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        if(panel.style.display === 'block') renderHistory();
+        if (panel.style.display === 'block') renderHistory();
     });
-    document.getElementById('clearHistoryBtn').addEventListener('click', clearAllHistory);
-    // hiển thị lịch sử nếu có dữ liệu cũ
-    if(localStorage.getItem('dailyReports')) renderHistory();
+    document.getElementById('clearAllHistoryBtn').addEventListener('click', clearAllHistory);
+    
+    if (localStorage.getItem('dailyReports')) {
+        renderHistory();
+    }
 </script>
 </body>
 </html>
